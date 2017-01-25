@@ -9,7 +9,7 @@ except ImportError:
     import simplejson as json
 
 MONGO_HOST = "localhost"
-MONGO_PORT = "27017"
+MONGO_PORT = 27017
 
 
 def get_group_hosts(**kwargs):

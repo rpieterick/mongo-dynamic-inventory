@@ -4,19 +4,20 @@ import json
 import sys
 import argparse
 
+from ansible.inventory.group import Group
 from ansible.inventory.ini import InventoryParser
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
 MONGO_HOST = "localhost"
-MONGO_PORT = "27017"
+MONGO_PORT = 27017
 
 
 def build_host_list(group):
     hosts = group.get_hosts()
     return_list = list()
     for host in hosts:
-        return_list.append({"hostname": host.name, "vars": host.get_variables()})
+        return_list.append({"hostname": host.name, "vars": host.get_vars()})
     return return_list
 
 
@@ -47,7 +48,7 @@ args = parser.parse_args()
 if args.f:
     file_name = args.f[0]
     print "Opening ", file_name
-    hostfile = InventoryParser(filename=file_name)
+    hostfile = InventoryParser(None, {"all": Group("all"), "ungrouped": Group("ungrouped")}, filename=file_name)
 else:
     print "You have to specify a filename"
     sys.exit(1)
@@ -61,7 +62,7 @@ groups_json = {}
 
 for group in groups:
     groups_json[group.name] = {}
-    groups_json[group.name]['vars'] = group.get_variables()
+    groups_json[group.name]['vars'] = group.get_vars()
     if group.name is "all":
         host_list = build_host_list(group)
 
@@ -81,7 +82,7 @@ if not args.d:
 
     # Inserting Groups in Mongo
     for group in groups:
-        g_obj = {"name": group.name, "vars": group.get_variables()}
+        g_obj = {"name": group.name, "vars": group.get_vars()}
         db_group = db.groups.find_one({"name": group.name})
         if db_group is not None:
             g_obj['_id'] = db_group['_id']
